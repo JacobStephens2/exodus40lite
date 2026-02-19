@@ -12,7 +12,7 @@
       icon: '\u{1F64F}',
       items: [
         { id: 'prayer-readings', label: 'Read the Mass readings and Psalm', freq: 'daily' },
-        { id: 'prayer-holyhour', label: 'Make a holy half hour', hint: 'Attending Mass counts', freq: 'daily' },
+        { id: 'prayer-holyhour', label: 'Make a holy half hour', freq: 'daily' },
         { id: 'prayer-lordsday', label: "Celebrate the Lord\u2019s Day by relaxing one discipline", freq: 'sunday' }
       ]
     },
@@ -21,7 +21,8 @@
       name: 'Fasting',
       icon: '\u{1F35E}',
       items: [
-        { id: 'fasting-fast', label: 'Fast and abstain from meat', freq: 'fasting' }
+        { id: 'fasting-fast', label: 'Fast', freq: 'fasting' },
+        { id: 'fasting-abstain', label: 'Abstain from meat', freq: 'abstinence' }
       ]
     },
     {
@@ -29,7 +30,7 @@
       name: 'Almsgiving & Works of Charity',
       icon: '\u{1FAF4}',
       items: [
-        { id: 'almsgiving-alms', label: 'Give alms', hint: 'Counts as a work of charity', freq: 'weekly' },
+        { id: 'almsgiving-alms', label: 'Give alms', freq: 'weekly' },
         {
           id: 'charity-work',
           label: 'Perform one work of charity',
@@ -47,7 +48,7 @@
       name: 'Fraternity',
       icon: '\u{1FAC2}',
       items: [
-        { id: 'fraternity-anchor', label: 'Anchor check-in', hint: 'Check in with your assigned anchor', freq: 'daily' },
+        { id: 'fraternity-anchor', label: 'Anchor check-in', freq: 'daily' },
         { id: 'fraternity-meeting', label: 'Fraternity meeting with the group', freq: 'weekly' }
       ]
     },
@@ -150,6 +151,9 @@
         if (dayOfWeek(dateStr) !== 5) return false;
         if (dateStr === '2026-02-20') return false;
         return true;
+      case 'abstinence':
+        if (dateStr === '2026-02-18') return true;
+        return dayOfWeek(dateStr) === 5;
       default:
         return true;
     }

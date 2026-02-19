@@ -48,7 +48,8 @@ This site's traffic should be measured by Google Analytics.
 - Celebrate the Lord's Day on Sundays by relaxing one discipline
 
 ## 🍞 Fasting
-- Fast and abstain from meat on Fridays (except first Friday given the Ash Wednesday fast)
+- Fast on Fridays (except first Friday given the Ash Wednesday fast)
+- Abstain from meat on Fridays
 
 ## 🫴 Almsgiving and Works of Charity
 * Weekly give alms (counts as a work of charity)
