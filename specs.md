@@ -27,6 +27,19 @@ For weekly tasks, new weeks should start on Sunday, the Lord's Day and the start
 # URL
 The app should be accessible at https://exodus40lite.stephens.page
 
+# Analytics via Google Tag
+This site's traffic should be measured by Google Analytics.
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0MLTLVTK6F"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0MLTLVTK6F');
+</script>
+
 # Exodus 40 Lite Rule
 
 ## 🙏 Prayer
