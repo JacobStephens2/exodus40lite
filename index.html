@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Exodus 40 Lite</title>
+  <meta name="description" content="Lenten rule of life tracker for the Good Wine Group">
+  <meta name="theme-color" content="#2D1B4E">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0MLTLVTK6F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0MLTLVTK6F');
+  </script>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <h1>Exodus 40 Lite</h1>
+      <p class="subtitle">Good Wine Group &middot; Lent 2026</p>
+    </div>
+    <nav class="date-nav">
+      <button id="prev-day" aria-label="Previous day">&lsaquo;</button>
+      <div class="date-center">
+        <span id="current-date"></span>
+        <span id="lent-day"></span>
+      </div>
+      <button id="next-day" aria-label="Next day">&rsaquo;</button>
+    </nav>
+    <button id="today-btn" hidden>Today</button>
+    <div class="progress">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <span id="progress-text"></span>
+    </div>
+  </header>
+
+  <main id="checklist"></main>
+
+  <script src="app.js"></script>
+</body>
+</html>
