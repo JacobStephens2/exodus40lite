@@ -73,3 +73,8 @@ This site's traffic should be measured by Google Analytics.
 - No desserts or sweets
 - Listen only to music that lifts the soul to God
 - Abstain from unnecessary purchases
+
+# Favicon and Icon
+The icon / favicon for the app should be purple and incorporate minimal stylistic elements related to prayer, fasting, and or almsgiving. Given this needs to work as a favicon, it should use fairly basic shapes overall.
+
+The site favicon and icons are in exodus40lite/favicon_io

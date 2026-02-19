@@ -1,11 +1,16 @@
-var CACHE_NAME = 'exodus40lite-v1';
+var CACHE_NAME = 'exodus40lite-v2';
 var ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
-  './icons/icon.svg'
+  './favicon_io/favicon.ico',
+  './favicon_io/favicon-32x32.png',
+  './favicon_io/favicon-16x16.png',
+  './favicon_io/apple-touch-icon.png',
+  './favicon_io/android-chrome-192x192.png',
+  './favicon_io/android-chrome-512x512.png'
 ];
 
 self.addEventListener('install', function (event) {
