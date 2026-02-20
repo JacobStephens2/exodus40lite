@@ -7,12 +7,12 @@ The app should be a progressive web app (PWA) which can be wrapped for Android (
 The app should be hosted in the exodus40lite folder.
 
 ## Tech Stack
-- **Vanilla HTML / CSS / JS** -- no frameworks, no build step
-- **Hand-written Service Worker** -- cache-first strategy for offline support
-- **localStorage** -- for persisting checklist state (personal/local only, no backend)
-- **manifest.json** -- for PWA installability
-- **Apache on Linux** -- to serve static files over HTTPS
-- **Capacitor** -- for future Android/iOS wrapping
+- Vanilla HTML / CSS / JS -- no frameworks, no build step
+- Hand-written Service Worker -- cache-first strategy for offline support
+- localStorage -- for persisting checklist state (personal/local only, no backend)
+- manifest.json -- for PWA installability
+- Apache on Linux -- to serve static files over HTTPS
+- Capacitor -- for future Android/iOS wrapping
 
 ## Data Model
 - All data is stored locally in the browser via localStorage
