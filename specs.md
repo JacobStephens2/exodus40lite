@@ -78,3 +78,6 @@ This site's traffic should be measured by Google Analytics.
 The icon / favicon for the app should be purple and incorporate minimal stylistic elements related to prayer, fasting, and or almsgiving. Given this needs to work as a favicon, it should use fairly basic shapes overall.
 
 The site favicon and icons are in exodus40lite/favicon_io
+
+# Notes
+Each day should have a notes box below the checklist which lets the user enter a note about their day. I want to use this to explain for example why I didn't check the "no unnecessary screen time" box on Feb. 19 2026.

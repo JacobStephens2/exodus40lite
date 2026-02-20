@@ -195,6 +195,29 @@
     return count;
   }
 
+  // ========== NOTES ==========
+
+  var NOTES_KEY = 'exodus40lite-notes';
+
+  function loadNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function getNote(dateStr) {
+    return loadNotes()[dateStr] || '';
+  }
+
+  function saveNote(dateStr, text) {
+    var notes = loadNotes();
+    if (text) {
+      notes[dateStr] = text;
+    } else {
+      delete notes[dateStr];
+    }
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  }
+
   // ========== DOM HELPERS ==========
 
   function el(tag, attrs, children) {
@@ -277,6 +300,22 @@
     if (totalItems > 0 && checkedItems === totalItems) {
       main.appendChild(el('div', { className: 'all-done', textContent: 'All disciplines kept today. Well done.' }));
     }
+
+    var notesSection = el('section', { className: 'notes-section' });
+    var notesLabel = el('label', { className: 'notes-label', textContent: 'Notes' });
+    notesLabel.setAttribute('for', 'daily-notes');
+    var textarea = el('textarea', {
+      id: 'daily-notes',
+      className: 'notes-textarea',
+      placeholder: 'Add a note about your day\u2026'
+    });
+    textarea.value = getNote(currentDate);
+    textarea.addEventListener('input', function () {
+      saveNote(currentDate, textarea.value);
+    });
+    notesSection.appendChild(notesLabel);
+    notesSection.appendChild(textarea);
+    main.appendChild(notesSection);
   }
 
   function buildItemRow(item, checked) {
@@ -395,6 +434,9 @@
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      location.reload();
+    });
   }
 
   // ========== INIT ==========
