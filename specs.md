@@ -59,7 +59,7 @@ This site's traffic should be measured by Google Analytics.
 
 ## 🫂 Fraternity
 - Daily anchor check-in with your assigned anchor (Each week you will be assigned a different anchor to provide accountability and support)
-- Weekly fraternity meeting with the group
+- Weekly fraternity meeting on Sunday with the group
 
 ## 🏛️ Stewardship
 - Get a full night's sleep (7+ hours)

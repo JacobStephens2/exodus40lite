@@ -49,7 +49,7 @@
       icon: '\u{1FAC2}',
       items: [
         { id: 'fraternity-anchor', label: 'Anchor check-in', freq: 'daily' },
-        { id: 'fraternity-meeting', label: 'Fraternity meeting with the group', freq: 'weekly' }
+        { id: 'fraternity-meeting', label: 'Fraternity meeting with the group', freq: 'sunday' }
       ]
     },
     {
