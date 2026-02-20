@@ -1,4 +1,4 @@
-var CACHE_NAME = 'exodus40lite-v5';
+var CACHE_NAME = 'exodus40lite-v7';
 var ASSETS = [
   './',
   './index.html',
@@ -35,6 +35,11 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
+  var url = new URL(event.request.url);
+  if (url.pathname.indexOf('/api/') !== -1) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).then(function (response) {
       var clone = response.clone();

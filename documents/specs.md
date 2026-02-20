@@ -81,3 +81,8 @@ The site favicon and icons are in exodus40lite/favicon_io
 
 # Notes
 Each day should have a notes box below the checklist which lets the user enter a note about their day. I want to use this to explain for example why I didn't check the "no unnecessary screen time" box on Feb. 19 2026.
+
+# Accounts
+To enable updating the checklist on both a user's laptop and phone, the app should let users create an account which can be used to store data on the server with. The create account feature should be optional - the app using localStorage only if the user does not have an account. The app should use PHP and MySQL to store and serve the data. The account feature should be setup to be compatible with using Capacitor to serve this PWA as an Android app.
+
+To create an account, the user must enter an email address and password. To login, the user must enter the email address and password of their account.

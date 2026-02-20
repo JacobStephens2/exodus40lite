@@ -2,6 +2,11 @@
   'use strict';
 
   var STORAGE_KEY = 'exodus40lite-data';
+  var NOTES_KEY = 'exodus40lite-notes';
+  var TIMESTAMPS_KEY = 'exodus40lite-timestamps';
+  var TOKEN_KEY = 'exodus40lite-token';
+  var USERNAME_KEY = 'exodus40lite-username';
+  var API_BASE = './api';
   var LENT_START = '2026-02-18';
   var LENT_END = '2026-04-04';
 
@@ -159,6 +164,22 @@
     }
   }
 
+  // ========== AUTH ==========
+
+  function getToken() { return localStorage.getItem(TOKEN_KEY); }
+  function getUsername() { return localStorage.getItem(USERNAME_KEY); }
+  function isLoggedIn() { return !!getToken(); }
+
+  function setAuth(token, username) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USERNAME_KEY, username);
+  }
+
+  function clearAuth() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USERNAME_KEY);
+  }
+
   // ========== LOCALSTORAGE ==========
 
   function loadData() {
@@ -168,6 +189,27 @@
 
   function saveData(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function loadTimestamps() {
+    try { return JSON.parse(localStorage.getItem(TIMESTAMPS_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function saveTimestamps(ts) {
+    localStorage.setItem(TIMESTAMPS_KEY, JSON.stringify(ts));
+  }
+
+  function touchTimestamp(dateStr) {
+    var ts = loadTimestamps();
+    ts[dateStr] = Date.now();
+    saveTimestamps(ts);
+    return ts[dateStr];
   }
 
   function isChecked(dateStr, itemId) {
@@ -182,6 +224,8 @@
     if (!data[dateStr][itemId]) delete data[dateStr][itemId];
     if (Object.keys(data[dateStr]).length === 0) delete data[dateStr];
     saveData(data);
+    var updatedAt = touchTimestamp(dateStr);
+    syncDateToServer(dateStr, updatedAt);
     return !!(data[dateStr] && data[dateStr][itemId]);
   }
 
@@ -193,15 +237,6 @@
       if (data[dates[i]] && data[dates[i]][itemId]) count++;
     }
     return count;
-  }
-
-  // ========== NOTES ==========
-
-  var NOTES_KEY = 'exodus40lite-notes';
-
-  function loadNotes() {
-    try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
-    catch (e) { return {}; }
   }
 
   function getNote(dateStr) {
@@ -216,6 +251,101 @@
       delete notes[dateStr];
     }
     localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    var updatedAt = touchTimestamp(dateStr);
+    syncDateToServer(dateStr, updatedAt);
+  }
+
+  // ========== SERVER SYNC ==========
+
+  function apiRequest(endpoint, options) {
+    var token = getToken();
+    if (!token) return Promise.resolve(null);
+    var opts = options || {};
+    if (!opts.headers) opts.headers = {};
+    opts.headers['Authorization'] = 'Bearer ' + token;
+    if (opts.body && !opts.headers['Content-Type']) {
+      opts.headers['Content-Type'] = 'application/json';
+    }
+    return fetch(API_BASE + '/' + endpoint, opts)
+      .then(function (r) {
+        if (r.status === 401) {
+          clearAuth();
+          renderAccountUI();
+          return null;
+        }
+        return r.json();
+      })
+      .catch(function () { return null; });
+  }
+
+  function syncDateToServer(dateStr, updatedAt) {
+    if (!isLoggedIn()) return;
+    var data = loadData();
+    var notes = loadNotes();
+    apiRequest('data.php', {
+      method: 'POST',
+      body: JSON.stringify({
+        date_str: dateStr,
+        items: data[dateStr] || {},
+        note: notes[dateStr] || '',
+        updated_at: updatedAt
+      })
+    });
+  }
+
+  function syncFromServer() {
+    if (!isLoggedIn()) return Promise.resolve();
+    return apiRequest('data.php', { method: 'GET' })
+      .then(function (result) {
+        if (!result || !result.data) return;
+        var localData = loadData();
+        var localNotes = loadNotes();
+        var localTs = loadTimestamps();
+        var serverRows = result.data;
+        var pushDates = [];
+
+        for (var i = 0; i < serverRows.length; i++) {
+          var row = serverRows[i];
+          var ds = row.date_str;
+          var serverUpdated = row.updated_at;
+          var localUpdated = localTs[ds] || 0;
+
+          if (serverUpdated > localUpdated) {
+            if (row.items && typeof row.items === 'object' && Object.keys(row.items).length > 0) {
+              localData[ds] = row.items;
+            } else {
+              delete localData[ds];
+            }
+            if (row.note) {
+              localNotes[ds] = row.note;
+            } else {
+              delete localNotes[ds];
+            }
+            localTs[ds] = serverUpdated;
+          } else if (localUpdated > serverUpdated) {
+            pushDates.push(ds);
+          }
+        }
+
+        var serverDateSet = {};
+        for (var j = 0; j < serverRows.length; j++) {
+          serverDateSet[serverRows[j].date_str] = true;
+        }
+        var allLocalDates = Object.keys(localTs);
+        for (var k = 0; k < allLocalDates.length; k++) {
+          if (!serverDateSet[allLocalDates[k]]) {
+            pushDates.push(allLocalDates[k]);
+          }
+        }
+
+        saveData(localData);
+        localStorage.setItem(NOTES_KEY, JSON.stringify(localNotes));
+        saveTimestamps(localTs);
+
+        for (var p = 0; p < pushDates.length; p++) {
+          syncDateToServer(pushDates[p], localTs[pushDates[p]]);
+        }
+      });
   }
 
   // ========== DOM HELPERS ==========
@@ -310,8 +440,12 @@
       placeholder: 'Add a note about your day\u2026'
     });
     textarea.value = getNote(currentDate);
+    var debounceTimer;
     textarea.addEventListener('input', function () {
-      saveNote(currentDate, textarea.value);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        saveNote(currentDate, textarea.value);
+      }, 400);
     });
     notesSection.appendChild(notesLabel);
     notesSection.appendChild(textarea);
@@ -409,6 +543,169 @@
     }
   }
 
+  // ========== ACCOUNT UI ==========
+
+  function renderAccountUI() {
+    var container = document.getElementById('account-section');
+    container.innerHTML = '';
+
+    if (isLoggedIn()) {
+      var info = el('div', { className: 'account-info' }, [
+        el('span', { textContent: 'Signed in as ' }),
+        el('strong', { textContent: getUsername() })
+      ]);
+      var signOutBtn = el('button', {
+        className: 'account-btn sign-out-btn',
+        textContent: 'Sign out',
+        type: 'button'
+      });
+      signOutBtn.addEventListener('click', function () {
+        apiRequest('logout.php', { method: 'POST' });
+        clearAuth();
+        renderAccountUI();
+      });
+      container.appendChild(info);
+      container.appendChild(signOutBtn);
+    } else {
+      var toggleLink = el('button', {
+        className: 'account-toggle',
+        textContent: 'Sign in to sync across devices',
+        type: 'button'
+      });
+      var formContainer = el('div', { className: 'account-form-container', hidden: true });
+
+      toggleLink.addEventListener('click', function () {
+        formContainer.hidden = !formContainer.hidden;
+        toggleLink.textContent = formContainer.hidden
+          ? 'Sign in to sync across devices'
+          : 'Cancel';
+      });
+
+      var isRegister = false;
+      var errorMsg = el('div', { className: 'account-error', hidden: true });
+      var usernameInput = el('input', {
+        type: 'email',
+        className: 'account-input',
+        placeholder: 'Email address',
+        autocomplete: 'email'
+      });
+      var passwordInput = el('input', {
+        type: 'password',
+        className: 'account-input',
+        placeholder: 'Password',
+        autocomplete: 'current-password'
+      });
+      var submitBtn = el('button', {
+        className: 'account-btn',
+        textContent: 'Sign in',
+        type: 'button'
+      });
+      var switchLink = el('button', {
+        className: 'account-switch',
+        textContent: "Don\u2019t have an account? Register",
+        type: 'button'
+      });
+
+      switchLink.addEventListener('click', function () {
+        isRegister = !isRegister;
+        submitBtn.textContent = isRegister ? 'Create account' : 'Sign in';
+        switchLink.textContent = isRegister
+          ? 'Already have an account? Sign in'
+          : "Don\u2019t have an account? Register";
+        passwordInput.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
+        errorMsg.hidden = true;
+      });
+
+      function doSubmit() {
+        var username = usernameInput.value.trim();
+        var password = passwordInput.value;
+        if (!username || !password) {
+          errorMsg.textContent = 'Email and password are required.';
+          errorMsg.hidden = false;
+          return;
+        }
+        if (username.indexOf('@') === -1) {
+          errorMsg.textContent = 'Please enter a valid email address.';
+          errorMsg.hidden = false;
+          return;
+        }
+        if (isRegister && password.length < 6) {
+          errorMsg.textContent = 'Password must be at least 6 characters.';
+          errorMsg.hidden = false;
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = isRegister ? 'Creating\u2026' : 'Signing in\u2026';
+        errorMsg.hidden = true;
+
+        var endpoint = isRegister ? 'register.php' : 'login.php';
+        var body = { username: username, password: password };
+
+        if (isRegister) {
+          body.checklist = loadData();
+          body.notes = loadNotes();
+        }
+
+        fetch(API_BASE + '/' + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (result) {
+          if (result.error) {
+            errorMsg.textContent = result.error;
+            errorMsg.hidden = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = isRegister ? 'Create account' : 'Sign in';
+            return;
+          }
+          setAuth(result.token, result.username);
+
+          if (isRegister) {
+            var ts = loadTimestamps();
+            var now = Date.now();
+            var data = loadData();
+            var notes = loadNotes();
+            var allDates = Object.keys(data).concat(Object.keys(notes));
+            for (var i = 0; i < allDates.length; i++) {
+              if (!ts[allDates[i]]) ts[allDates[i]] = now;
+            }
+            saveTimestamps(ts);
+          }
+
+          syncFromServer().then(function () {
+            render();
+            renderAccountUI();
+          });
+        })
+        .catch(function () {
+          errorMsg.textContent = 'Connection failed. Try again.';
+          errorMsg.hidden = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRegister ? 'Create account' : 'Sign in';
+        });
+      }
+
+      submitBtn.addEventListener('click', doSubmit);
+      passwordInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doSubmit();
+      });
+      usernameInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') passwordInput.focus();
+      });
+
+      formContainer.appendChild(errorMsg);
+      formContainer.appendChild(usernameInput);
+      formContainer.appendChild(passwordInput);
+      formContainer.appendChild(submitBtn);
+      formContainer.appendChild(switchLink);
+
+      container.appendChild(toggleLink);
+      container.appendChild(formContainer);
+    }
+  }
+
   // ========== EVENT HANDLERS ==========
 
   document.getElementById('prev-day').addEventListener('click', function () {
@@ -449,4 +746,11 @@
 
   currentDate = clampToLent(todayStr());
   render();
+  renderAccountUI();
+
+  if (isLoggedIn()) {
+    syncFromServer().then(function () {
+      render();
+    });
+  }
 })();

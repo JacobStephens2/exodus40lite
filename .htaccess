@@ -1,3 +1,7 @@
 <Files "sw.js">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
 </Files>
+
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
