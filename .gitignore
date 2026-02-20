@@ -1,2 +1,2 @@
-api/secrets.php
-api/setup-credentials.sql
+api/private/secrets.php
+api/private/setup-credentials.sql

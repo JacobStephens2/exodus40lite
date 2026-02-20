@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/secrets.php';
+require __DIR__ . '/private/secrets.php';
 
 function getDB() {
     static $pdo;
